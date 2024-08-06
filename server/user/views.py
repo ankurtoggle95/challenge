@@ -1,9 +1,11 @@
+# Import necessary decorators and permissions from Django REST framework
 from django.contrib.auth import authenticate
 from django.conf import settings
 from django.middleware import csrf
 from rest_framework import exceptions as rest_exceptions, response, decorators as rest_decorators, permissions as rest_permissions
 from rest_framework_simplejwt import tokens, views as jwt_views, serializers as jwt_serializers, exceptions as jwt_exceptions
 from user import serializers, models
+import requests
 
 
 def get_user_tokens(user):
@@ -128,3 +130,36 @@ def user(request):
 
     serializer = serializers.UserSerializer(user)
     return response.Response(serializer.data)
+
+
+# Define a view to get Ethereum balance
+@rest_decorators.api_view(["GET"])
+@rest_decorators.permission_classes([rest_permissions.IsAuthenticated])
+def get_ethereum_balance(request):
+    # Retrieve the user from the request
+    user = request.user
+    # Get the user's Ethereum wallet address
+    ethereum_wallet = user.ethereum_wallet
+
+    # Check if the user has an Ethereum wallet address
+    if not ethereum_wallet:
+        # Return an error response if no wallet address is found
+        return response.Response({"balance": "No Ethereum wallet address found."}, status=400)
+
+    try:
+        # Get the Etherscan API key from settings
+        api_key = settings.ETHERSCAN_API_KEY
+        # Construct the Etherscan API URL to get the balance
+        etherscan_url = f"https://api.etherscan.io/api?module=account&action=balance&address={ethereum_wallet}&tag=latest&apikey={api_key}"
+        # Make a request to the Etherscan API
+        etherscan_response = requests.get(etherscan_url)
+        # Parse the balance from the API response
+        balance = etherscan_response.json().get("result")
+        # Convert the balance from Wei to Ether
+        balance_in_ether = int(balance) / 10**18
+    except Exception as e:
+        # Return an error response if an exception occurs
+        return response.Response({"error": str(e)}, status=500)
+
+    # Return the balance in Ether
+    return response.Response({"balance": balance_in_ether})

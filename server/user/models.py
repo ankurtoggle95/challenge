@@ -43,6 +43,12 @@ class User(AbstractBaseUser):
     email = models.EmailField(null=False, blank=False, unique=True)
     first_name = models.CharField(max_length=50, blank=False, null=False, default='Default first name')
     last_name = models.CharField(max_length=50, blank=False, null=False, default='Default last name')
+    # Define a CharField for storing the Ethereum wallet address
+    ethereum_wallet = models.CharField(
+    max_length=42,  # Set the maximum length to 42 characters (standard length for Ethereum addresses)
+    blank=True,  # Allow the field to be left blank in the form
+    null=True  # Allow the field to be null in the database
+    )
     is_admin = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)

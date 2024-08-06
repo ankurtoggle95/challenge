@@ -207,3 +207,6 @@ REST_FRAMEWORK = {
 }
 
 AUTH_USER_MODEL = 'user.User'
+
+# Define the API key for Etherscan, used to fetch Ethereum balance
+ETHERSCAN_API_KEY = "VH93S5U62TRXZEWRVAE3CZVVRPGURQEUBN"
